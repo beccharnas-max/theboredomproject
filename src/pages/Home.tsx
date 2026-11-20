@@ -23,6 +23,13 @@ const photos = [
   },
 ];
 
+const audiences = [
+  "CAFÉS + COFFEE SHOPS",
+  "SALONS + BEAUTY",
+  "HOME SERVICES",
+  "CREATIVE + CURIOUS THINGS",
+];
+
 export default function Home() {
   const photoStripRef = useRef<HTMLElement>(null);
   const [photosVisible, setPhotosVisible] = useState(false);
@@ -49,7 +56,7 @@ export default function Home() {
     <>
       <PageMeta
         title="The Boredom Project | Custom Websites for Small Businesses"
-        description="Personality-packed custom websites for cafes, salons, home services and independent businesses—with no templates, subscriptions or hidden fees."
+        description="Personality-packed custom websites for cafés, salons, home services and independent businesses. One-off pricing, no subscriptions and no hidden fees."
       />
       <main>
         <section className="hero">
@@ -89,9 +96,9 @@ export default function Home() {
               OFF-THE-SHELF.
             </h2>
             <p>
-              So why should your website be? The Boredom Project makes one-of-one websites with your
-              style, your story and your customers in mind. No page builders. No weird
-              subscriptions. No cookie-cutter nonsense.
+              So why should your website be? The Boredom Project builds custom websites around your
+              style, your story and your customers. No weird subscriptions. No cookie-cutter
+              nonsense.
             </p>
             <Link to="/services" className="text-link">
               HOW IT WORKS <Arrow />
@@ -102,7 +109,7 @@ export default function Home() {
         <section
           ref={photoStripRef}
           className={`photo-strip${photosVisible ? " in-view" : ""}`}
-          aria-label="Businesses we build for"
+          aria-label="Businesses like yours"
         >
           {photos.map((photo, index) => (
             <figure key={photo.label} className={`photo-card card-${index + 1}`}>
@@ -126,16 +133,10 @@ export default function Home() {
             </h2>
           </div>
           <div className="audience-list">
-            {[
-              "CAFÉS + COFFEE SHOPS",
-              "SALONS + BEAUTY",
-              "HOME SERVICES",
-              "CREATIVE + CURIOUS THINGS",
-            ].map((item, index) => (
+            {audiences.map((item, index) => (
               <div className="audience-row" key={item}>
                 <span>0{index + 1}</span>
                 <h3>{item}</h3>
-                <b>↗</b>
               </div>
             ))}
           </div>
@@ -181,9 +182,13 @@ export default function Home() {
               <br />
               PAYMENT
             </div>
-            <p>Prices start from as little as a one-off payment of $600, plus domain hosting.</p>
+            <p>
+              One-page websites start from $600. Multi-page websites start from $899. You pay once
+              for the build, plus your own domain name.
+            </p>
             <small>
-              Domain hosting simply means purchasing your website address—like www.yourwebsite.com.
+              Your domain name is your website address, like www.yourbusiness.com.au. You buy it
+              directly, so it's always yours.
             </small>
             <div className="price-promises">
               <span>NO SUBSCRIPTIONS</span>
