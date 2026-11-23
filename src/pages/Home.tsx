@@ -309,9 +309,9 @@ export default function Home() {
             You pay for the build. You own the finished website. If you want help later, book it
             when you need it. That's it. Radical, apparently.
           </p>
-          <a href="mailto:hello@theboredomproject.studio" className="button-dark">
+          <Link to="/contact" className="button-dark">
             TELL ME YOUR IDEA <Arrow />
-          </a>
+          </Link>
         </section>
 
         <section className="price-promise">

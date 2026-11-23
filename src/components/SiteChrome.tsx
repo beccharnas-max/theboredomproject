@@ -57,9 +57,9 @@ function Nav() {
         <NavLink to="/services" onClick={() => setOpen(false)}>
           SERVICES
         </NavLink>
-        <a className="nav-cta" href="mailto:hello@theboredomproject.studio">
+        <Link className="nav-cta" to="/contact" onClick={() => setOpen(false)}>
           START A PROJECT <Arrow />
-        </a>
+        </Link>
       </nav>
     </header>
   );
@@ -74,11 +74,11 @@ export function Footer() {
           <br />
           WITH A STORY?
         </p>
-        <a href="mailto:hello@theboredomproject.studio">
+        <Link to="/contact">
           LET'S MAKE
           <br />
           SOMETHING <Arrow />
-        </a>
+        </Link>
       </div>
       <div className="footer-bottom">
         <span>THE BOREDOM PROJECT © {new Date().getFullYear()}</span>
