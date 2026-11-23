@@ -30,30 +30,169 @@ const audiences = [
   "CREATIVE + CURIOUS THINGS",
 ];
 
-export default function Home() {
-  const photoStripRef = useRef<HTMLElement>(null);
-  const [photosVisible, setPhotosVisible] = useState(false);
+// All the new animation styles live here so this file is the only thing you need to swap.
+// Colours fall back to sensible defaults; set --bp-accent / --bp-ink / --bp-paper in your global CSS to match the brand.
+const funkStyles = `
+/* ---------- HERO: fly in on load ---------- */
+.hero { overflow-x: clip; }
+
+.hero h1 .fly-line {
+  display: block;
+  font-weight: inherit;
+  will-change: transform, opacity;
+  animation-duration: 1.1s;
+  animation-timing-function: cubic-bezier(.2,.9,.25,1);
+  animation-fill-mode: both;
+}
+.hero h1 .fly-1 { animation-name: bpFlyLeft;  animation-delay: .05s; }
+.hero h1 .fly-2 { animation-name: bpFlyRight; animation-delay: .22s; }
+.hero h1 .fly-3 { animation-name: bpFlyLost;  animation-delay: .42s; animation-duration: 1.4s; }
+
+@keyframes bpFlyLeft {
+  0%   { transform: translateX(-120vw) rotate(-10deg) skewX(25deg); opacity: 0; }
+  55%  { transform: translateX(2.5vw) rotate(1.5deg) skewX(-6deg); opacity: 1; }
+  78%  { transform: translateX(-.8vw) rotate(-.4deg) skewX(2deg); }
+  100% { transform: none; opacity: 1; }
+}
+@keyframes bpFlyRight {
+  0%   { transform: translateX(120vw) rotate(10deg) skewX(-25deg); opacity: 0; }
+  55%  { transform: translateX(-2.5vw) rotate(-1.5deg) skewX(6deg); opacity: 1; }
+  78%  { transform: translateX(.8vw) rotate(.4deg) skewX(-2deg); }
+  100% { transform: none; opacity: 1; }
+}
+/* "CAN GET LOST." arrives from the far right and lands with a little tumble */
+@keyframes bpFlyLost {
+  0%   { transform: translate(140vw, -30vh) rotate(24deg) scale(.6); opacity: 0; }
+  50%  { transform: translate(-3vw, 1vh) rotate(-7deg) scale(1.06); opacity: 1; }
+  70%  { transform: translate(1vw, 0) rotate(3deg) scale(.98); }
+  85%  { transform: translate(-.4vw, 0) rotate(-1deg) scale(1.01); }
+  100% { transform: none; opacity: 1; }
+}
+
+/* ---------- INTRO: "THE BIG IDEA" ---------- */
+/* tighter block: trim the vertical space and drop any rules/lines */
+.intro.intro-fx {
+  position: relative;
+  min-height: 0;
+  padding-top: clamp(3rem, 6vw, 5.5rem);
+  padding-bottom: clamp(3rem, 6vw, 5.5rem);
+  border-block: 0;
+}
+.intro.intro-fx .intro-top { margin-bottom: 0; border: 0; }
+
+/* the strike-through draws itself across OFF-THE-SHELF */
+.intro .strike {
+  position: relative;
+  display: inline-block;
+  text-decoration: none;
+}
+.intro .strike::after {
+  content: "";
+  position: absolute;
+  left: -2%;
+  top: 54%;
+  width: 104%;
+  height: .14em;
+  background: var(--bp-accent, #ff3d00);
+  transform: scaleX(0) rotate(-1.5deg);
+  transform-origin: left center;
+  transition: transform .7s cubic-bezier(.7,0,.2,1) .9s;
+}
+.intro.in-view .strike::after { transform: scaleX(1) rotate(-1.5deg); }
+
+/* "100% custom" square stamp: sits in the empty left column and rocks left and right */
+.intro-sticker {
+  position: absolute;
+  left: 4.5%;
+  top: 50%;
+  translate: 0 -50%;
+  width: clamp(7rem, 11vw, 11rem);
+  aspect-ratio: 1 / 1;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  font-weight: 900;
+  font-size: clamp(.95rem, 1.5vw, 1.5rem);
+  line-height: 1;
+  letter-spacing: .02em;
+  color: var(--bp-ink, #111);
+  background: var(--bp-accent, #ff3d00);
+  border: 4px solid var(--bp-paper, #f5f2ea);
+  border-radius: 0;
+  rotate: -12deg;
+  scale: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.intro-sticker::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border: 2px dashed var(--bp-ink, #111);
+}
+.intro.in-view .intro-sticker {
+  animation:
+    bpStickerPop .8s cubic-bezier(.3,1.6,.5,1) 1.1s both,
+    bpTilt 3.2s ease-in-out 1.9s infinite alternate;
+}
+@keyframes bpStickerPop {
+  0%   { scale: 0; }
+  100% { scale: 1; }
+}
+/* rocks between -12deg and +12deg, never a full turn */
+@keyframes bpTilt {
+  0%   { rotate: -12deg; }
+  100% { rotate: 12deg; }
+}
+
+/* no room for the stamp once the layout stacks */
+@media (max-width: 900px) {
+  .intro-sticker { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero h1 .fly-line,
+  .intro-sticker {
+    animation: none !important;
+  }
+  .intro-sticker { scale: 1; }
+  .intro .strike::after { transition: none; }
+}
+`;
+
+// Fires once, the first time the element scrolls into view.
+function useInView<T extends HTMLElement>(threshold = 0.2) {
+  const ref = useRef<T>(null);
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const section = photoStripRef.current;
-    if (!section) return;
+    const element = ref.current;
+    if (!element) return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setPhotosVisible(true);
+          setVisible(true);
           observer.disconnect();
         }
       },
-      { threshold: 0.2 },
+      { threshold },
     );
 
-    observer.observe(section);
+    observer.observe(element);
     return () => observer.disconnect();
-  }, []);
+  }, [threshold]);
+
+  return [ref, visible] as const;
+}
+
+export default function Home() {
+  const [introRef, introVisible] = useInView<HTMLElement>(0.3);
+  const [photoStripRef, photosVisible] = useInView<HTMLElement>(0.2);
 
   return (
     <>
+      <style>{funkStyles}</style>
       <PageMeta
         title="The Boredom Project | Custom Websites for Small Businesses"
         description="Personality-packed custom websites for cafés, salons, home services and independent businesses. One-off pricing, no subscriptions and no hidden fees."
@@ -62,11 +201,9 @@ export default function Home() {
         <section className="hero">
           <div className="hero-kicker">WEBSITES FOR GOOD SMALL BUSINESSES</div>
           <h1>
-            BORING
-            <br />
-            WEBSITES
-            <br />
-            <span>CAN GET LOST.</span>
+            <strong className="fly-line fly-1">BORING</strong>
+            <strong className="fly-line fly-2">WEBSITES</strong>
+            <span className="fly-line fly-3">CAN GET LOST.</span>
           </h1>
           <div className="hero-bottom">
             <p>
@@ -87,22 +224,32 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="intro">
-          <div className="section-tag">[ THE BIG IDEA ]</div>
-          <div className="intro-copy">
-            <h2>
-              YOUR BUSINESS ISN'T
+        <section
+          ref={introRef}
+          className={`intro intro-fx${introVisible ? " in-view" : ""}`}
+        >
+          <div className="intro-top">
+            <div className="section-tag">[ THE BIG IDEA ]</div>
+            <div className="intro-copy">
+              <h2>
+                YOUR BUSINESS ISN'T
+                <br />
+                <span className="strike">OFF-THE-SHELF.</span>
+              </h2>
+              <p>
+                So why should your website be? The Boredom Project builds custom websites around
+                your style, your story and your customers. No weird subscriptions. No
+                cookie-cutter nonsense.
+              </p>
+              <Link to="/services" className="text-link">
+                HOW IT WORKS <Arrow />
+              </Link>
+            </div>
+            <div className="intro-sticker" aria-hidden="true">
+              100%
               <br />
-              OFF-THE-SHELF.
-            </h2>
-            <p>
-              So why should your website be? The Boredom Project builds custom websites around your
-              style, your story and your customers. No weird subscriptions. No cookie-cutter
-              nonsense.
-            </p>
-            <Link to="/services" className="text-link">
-              HOW IT WORKS <Arrow />
-            </Link>
+              CUSTOM
+            </div>
           </div>
         </section>
 

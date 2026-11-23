@@ -278,10 +278,15 @@
 }
 
 .intro {
+  padding: 120px 5vw 0;
+  background: var(--ink);
+  color: var(--paper);
+  border-bottom: 2px solid var(--ink);
+  overflow: hidden;
+}
+.intro-top {
   display: grid;
   grid-template-columns: 30% 70%;
-  padding: 120px 5vw;
-  border-bottom: 2px solid var(--ink);
 }
 .intro-copy h2,
 .for-you h2,
@@ -305,6 +310,120 @@
   border-bottom: 2px solid;
   padding-bottom: 4px;
   font: 500 13px "DM Mono";
+}
+.intro .text-link {
+  color: var(--acid);
+}
+.intro .text-link:hover {
+  color: var(--pink);
+}
+
+/* "Off-the-shelf" gets crossed out when the section scrolls into view */
+.strike {
+  position: relative;
+  display: inline-block;
+  color: var(--acid);
+}
+.strike::after {
+  content: "";
+  position: absolute;
+  left: -2%;
+  right: -2%;
+  top: 54%;
+  height: 0.11em;
+  background: var(--pink);
+  transform: rotate(-2deg) scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.7s cubic-bezier(0.7, 0, 0.2, 1) 0.5s;
+}
+.intro.in-view .strike::after {
+  transform: rotate(-2deg) scaleX(1);
+}
+
+/* A shelf of identical templates, and one that jumps out */
+.shelf {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: clamp(10px, 2vw, 28px);
+  margin-top: 90px;
+  padding-bottom: 14px;
+  border-bottom: 14px solid var(--paper);
+}
+.shelf-item {
+  flex: 1;
+  height: 210px;
+  padding: 18px 16px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 2px dashed rgba(246, 242, 233, 0.35);
+  background: rgba(246, 242, 233, 0.08);
+  opacity: 0;
+  transform: translateY(80px);
+}
+.shelf-item i {
+  display: block;
+  height: 10px;
+  border-radius: 99px;
+  background: rgba(246, 242, 233, 0.25);
+}
+.shelf-item i:nth-child(1) {
+  width: 80%;
+}
+.shelf-item i:nth-child(2) {
+  width: 55%;
+}
+.shelf-item i:nth-child(3) {
+  width: 68%;
+}
+.shelf-item small {
+  margin-top: auto;
+  font: 500 10px "DM Mono";
+  letter-spacing: 0.08em;
+  opacity: 0.55;
+}
+.shelf-item.you {
+  position: relative;
+  height: 290px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 2px solid var(--ink);
+  background: var(--pink);
+  color: var(--ink);
+  box-shadow: 7px 7px 0 var(--acid);
+  z-index: 2;
+}
+.shelf-item.you b {
+  font: 400 clamp(2.6rem, 6vw, 5.4rem)/1 "Titan One";
+  letter-spacing: -0.04em;
+}
+.you-star {
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  animation: you-spin 6s linear infinite;
+}
+.shelf.in-view .shelf-item {
+  opacity: 1;
+  transform: none;
+  transition:
+    transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) var(--d),
+    opacity 0.4s ease var(--d);
+}
+.shelf.in-view .shelf-item.you {
+  transform: translateY(-34px) rotate(-3deg);
+  transition:
+    transform 0.9s cubic-bezier(0.34, 2.1, 0.64, 1) 0.9s,
+    opacity 0.4s ease 0.9s;
+}
+.shelf.in-view .shelf-item.you:hover {
+  transform: translateY(-46px) rotate(4deg) scale(1.04);
+  transition-delay: 0s;
+}
+@keyframes you-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .photo-strip {
@@ -855,9 +974,25 @@ footer {
     display: none;
   }
   .intro {
+    padding: 75px 20px 0;
+  }
+  .intro-top {
     grid-template-columns: 1fr;
-    padding: 75px 20px;
     gap: 45px;
+  }
+  .shelf {
+    margin-top: 60px;
+  }
+  .shelf-item {
+    height: 150px;
+    padding: 12px 10px;
+  }
+  .shelf-item.you {
+    height: 210px;
+  }
+  .shelf-item:nth-child(1),
+  .shelf-item:nth-child(5) {
+    display: none;
   }
   .intro-copy h2,
   .for-you h2,
@@ -1010,5 +1145,9 @@ footer {
   }
   .photo-card {
     opacity: 1;
+  }
+  .shelf-item,
+  .strike::after {
+    transition: none !important;
   }
 }
