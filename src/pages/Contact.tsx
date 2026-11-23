@@ -1,9 +1,15 @@
 import { useState, type FormEvent } from "react";
 import { Footer, PageMeta } from "../components/SiteChrome";
 
-// Web3Forms access keys are safe to keep in public code: they can only send messages to your inbox.
+// Web3Forms public Access Key.
+// This is designed to be used in frontend code.
 const ACCESS_KEY = "7ac3c119-2d54-4afe-a998-c1506d478fe5";
+
 const CONTACT_EMAIL = "hello@theboredomproject.au";
+
+const MAX_NAME_LENGTH = 100;
+const MAX_EMAIL_LENGTH = 254;
+const MAX_MESSAGE_LENGTH = 5000;
 
 type Status = "idle" | "sending" | "success" | "error";
 
@@ -18,6 +24,7 @@ const contactStyles = `
   gap: clamp(2rem, 6vw, 6rem);
   align-items: start;
 }
+
 .contact-intro .contact-tag {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: .85rem;
@@ -25,18 +32,24 @@ const contactStyles = `
   margin-bottom: 1.5rem;
   display: block;
 }
+
 .contact-intro h1 {
   font-size: clamp(2.6rem, 7vw, 6rem);
   line-height: .95;
   margin: 0 0 1.5rem;
 }
-.contact-intro h1 span { color: var(--bp-lime, #dffd5f); }
+
+.contact-intro h1 span {
+  color: var(--bp-lime, #dffd5f);
+}
+
 .contact-intro p {
   font-size: clamp(1.05rem, 1.6vw, 1.35rem);
   line-height: 1.5;
   max-width: 32rem;
   margin: 0 0 1.5rem;
 }
+
 .contact-direct {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: .9rem;
@@ -44,14 +57,23 @@ const contactStyles = `
   user-select: all;
 }
 
-.contact-form { display: grid; gap: 1.25rem; }
-.contact-field { display: grid; gap: .5rem; }
+.contact-form {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.contact-field {
+  display: grid;
+  gap: .5rem;
+}
+
 .contact-field label {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: .8rem;
   letter-spacing: .08em;
   text-transform: uppercase;
 }
+
 .contact-field input,
 .contact-field textarea {
   width: 100%;
@@ -65,12 +87,18 @@ const contactStyles = `
   outline: none;
   transition: border-color .15s ease, background-color .15s ease;
 }
-.contact-field textarea { min-height: 10rem; resize: vertical; }
+
+.contact-field textarea {
+  min-height: 10rem;
+  resize: vertical;
+}
+
 .contact-field input:focus,
 .contact-field textarea:focus {
   border-color: var(--bp-lime, #dffd5f);
   background: rgba(255,255,255,.04);
 }
+
 .contact-submit {
   justify-self: start;
   font: inherit;
@@ -84,12 +112,24 @@ const contactStyles = `
   cursor: pointer;
   transition: transform .15s ease, box-shadow .15s ease;
 }
+
 .contact-submit:hover:not(:disabled) {
   transform: translate(-3px, -3px);
   box-shadow: 5px 5px 0 var(--bp-paper, #f5f2ea);
 }
-.contact-submit:disabled { opacity: .6; cursor: wait; }
-.contact-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+
+.contact-submit:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+
+.contact-hp {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
 
 .contact-message {
   border: 2px solid var(--bp-paper, #f5f2ea);
@@ -97,12 +137,33 @@ const contactStyles = `
   font-size: 1.05rem;
   line-height: 1.5;
 }
-.contact-message.success { border-color: var(--bp-lime, #dffd5f); }
-.contact-message.error { border-color: #ff6b4a; }
-.contact-message strong { display: block; font-size: 1.4rem; margin-bottom: .35rem; }
+
+.contact-message.success {
+  border-color: var(--bp-lime, #dffd5f);
+}
+
+.contact-message.error {
+  border-color: #ff6b4a;
+}
+
+.contact-message strong {
+  display: block;
+  font-size: 1.4rem;
+  margin-bottom: .35rem;
+}
 
 @media (max-width: 860px) {
-  .contact-page { grid-template-columns: 1fr; }
+  .contact-page {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-submit,
+  .contact-field input,
+  .contact-field textarea {
+    transition: none;
+  }
 }
 `;
 
@@ -111,29 +172,70 @@ export default function Contact() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
     if (status === "sending") return;
 
     const form = event.currentTarget;
     const data = new FormData(form);
 
-    // Honeypot: real people never tick this hidden box.
-    if (data.get("botcheck")) return;
+    // Honeypot: bots may fill this hidden field.
+    // Real visitors should leave it empty.
+    if (data.get("botcheck")) {
+      setStatus("success");
+      form.reset();
+      return;
+    }
+
+    // Read and trim user input.
+    const name = String(data.get("name") ?? "").trim();
+    const email = String(data.get("email") ?? "").trim();
+    const message = String(data.get("message") ?? "").trim();
+
+    // Validate required fields and maximum lengths.
+    if (
+      !name ||
+      !email ||
+      !message ||
+      name.length > MAX_NAME_LENGTH ||
+      email.length > MAX_EMAIL_LENGTH ||
+      message.length > MAX_MESSAGE_LENGTH
+    ) {
+      setStatus("error");
+      return;
+    }
+
+    // Basic email format validation.
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailPattern.test(email)) {
+      setStatus("error");
+      return;
+    }
 
     setStatus("sending");
 
     try {
-      const response = await fetch("https://api.web3forms.com/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({
-          access_key: ACCESS_KEY,
-          subject: "New enquiry from The Boredom Project website",
-          from_name: "The Boredom Project website",
-          name: data.get("name"),
-          email: data.get("email"),
-          message: data.get("message"),
-        }),
-      });
+      const response = await fetch(
+        "https://api.web3forms.com/submit",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            access_key: ACCESS_KEY,
+            subject: "New enquiry from The Boredom Project website",
+            from_name: "The Boredom Project website",
+            name,
+            email,
+            message,
+
+            // Pass the honeypot field to Web3Forms.
+            botcheck: Boolean(data.get("botcheck")),
+          }),
+        }
+      );
 
       const result = await response.json();
 
@@ -151,71 +253,131 @@ export default function Contact() {
   return (
     <>
       <style>{contactStyles}</style>
+
       <PageMeta
         title="Contact | The Boredom Project"
         description="Tell us about your business and your website idea. Custom websites for small businesses, one-off pricing, no subscriptions."
       />
+
       <main className="contact-page">
         <div className="contact-intro">
           <span className="contact-tag">[ SAY HELLO ]</span>
+
           <h1>
             TELL ME
             <br />
             YOUR <span>IDEA.</span>
           </h1>
+
           <p>
-            Tell me about your business and what you're after. A few lines is plenty. I'll get
-            back to you with next steps and a clear price.
+            Tell me about your business and what you're after.
+            A few lines is plenty. I'll get back to you with
+            next steps and a clear price.
           </p>
-          <p className="contact-direct">{CONTACT_EMAIL}</p>
+
+          <p className="contact-direct">
+            {CONTACT_EMAIL}
+          </p>
         </div>
 
         <div>
           {status === "success" ? (
-            <div className="contact-message success" role="status">
+            <div
+              className="contact-message success"
+              role="status"
+              aria-live="polite"
+            >
               <strong>MESSAGE SENT.</strong>
               Thanks for getting in touch. I'll reply as soon as I can.
             </div>
           ) : (
-            <form className="contact-form" onSubmit={handleSubmit}>
+            <form
+              className="contact-form"
+              onSubmit={handleSubmit}
+              noValidate
+            >
               <div className="contact-field">
-                <label htmlFor="contact-name">Your name</label>
-                <input id="contact-name" name="name" type="text" required autoComplete="name" />
+                <label htmlFor="contact-name">
+                  Your name
+                </label>
+
+                <input
+                  id="contact-name"
+                  name="name"
+                  type="text"
+                  required
+                  maxLength={MAX_NAME_LENGTH}
+                  autoComplete="name"
+                  disabled={status === "sending"}
+                />
               </div>
 
               <div className="contact-field">
-                <label htmlFor="contact-email">Your email</label>
-                <input id="contact-email" name="email" type="email" required autoComplete="email" />
+                <label htmlFor="contact-email">
+                  Your email
+                </label>
+
+                <input
+                  id="contact-email"
+                  name="email"
+                  type="email"
+                  required
+                  maxLength={MAX_EMAIL_LENGTH}
+                  autoComplete="email"
+                  disabled={status === "sending"}
+                />
               </div>
 
               <div className="contact-field">
-                <label htmlFor="contact-message">Your idea</label>
-                <textarea id="contact-message" name="message" required />
+                <label htmlFor="contact-message">
+                  Your idea
+                </label>
+
+                <textarea
+                  id="contact-message"
+                  name="message"
+                  required
+                  maxLength={MAX_MESSAGE_LENGTH}
+                  disabled={status === "sending"}
+                />
               </div>
 
+              {/* Web3Forms honeypot spam protection */}
               <input
                 type="checkbox"
                 name="botcheck"
                 className="contact-hp"
+                style={{ display: "none" }}
                 tabIndex={-1}
                 autoComplete="off"
                 aria-hidden="true"
               />
 
-              <button type="submit" className="contact-submit" disabled={status === "sending"}>
+              <button
+                type="submit"
+                className="contact-submit"
+                disabled={status === "sending"}
+                aria-busy={status === "sending"}
+              >
                 {status === "sending" ? "SENDING..." : "SEND IT"}
               </button>
 
               {status === "error" && (
-                <div className="contact-message error" role="alert">
+                <div
+                  className="contact-message error"
+                  role="alert"
+                  aria-live="assertive"
+                >
                   <strong>THAT DIDN'T SEND.</strong>
-                  Something went wrong. Please try again, or email {CONTACT_EMAIL} directly.
+                  Something went wrong. Please try again, or email{" "}
+                  {CONTACT_EMAIL} directly.
                 </div>
               )}
             </form>
           )}
         </div>
       </main>
+
       <Footer />
     </>
   );
