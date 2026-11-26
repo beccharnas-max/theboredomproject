@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { Arrow, Footer, PageMeta } from "../components/SiteChrome";
+import YawnIntro, { shouldPlayYawn } from "../components/YawnIntro";
 
 const photos = [
   {
@@ -47,6 +48,9 @@ const funkStyles = `
 .hero h1 .fly-1 { animation-name: bpFlyLeft;  animation-delay: .05s; }
 .hero h1 .fly-2 { animation-name: bpFlyRight; animation-delay: .22s; }
 .hero h1 .fly-3 { animation-name: bpFlyLost;  animation-delay: .42s; animation-duration: 1.4s; }
+
+/* hold the hero fly-in until the yawn opens up the page */
+.yawn-waiting .hero h1 .fly-line { animation-play-state: paused; }
 
 @keyframes bpFlyLeft {
   0%   { transform: translateX(-120vw) rotate(-10deg) skewX(25deg); opacity: 0; }
@@ -189,6 +193,9 @@ function useInView<T extends HTMLElement>(threshold = 0.2) {
 export default function Home() {
   const [introRef, introVisible] = useInView<HTMLElement>(0.3);
   const [photoStripRef, photosVisible] = useInView<HTMLElement>(0.2);
+  const [intro, setIntro] = useState<"playing" | "revealing" | "done">(() =>
+    shouldPlayYawn() ? "playing" : "done",
+  );
 
   return (
     <>
@@ -197,7 +204,7 @@ export default function Home() {
         title="The Boredom Project | Custom Websites for Small Businesses"
         description="Personality-packed custom websites for cafés, salons, home services and independent businesses. One-off pricing, no subscriptions and no hidden fees."
       />
-      <main>
+      <main className={intro === "playing" ? "yawn-waiting" : undefined}>
         <section className="hero">
           <div className="hero-kicker">WEBSITES FOR GOOD SMALL BUSINESSES</div>
           <h1>
@@ -345,6 +352,12 @@ export default function Home() {
         </section>
       </main>
       <Footer />
+      {intro !== "done" && (
+        <YawnIntro
+          onReveal={() => setIntro((current) => (current === "playing" ? "revealing" : current))}
+          onDone={() => setIntro("done")}
+        />
+      )}
     </>
   );
 }
