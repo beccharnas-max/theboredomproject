@@ -19,7 +19,7 @@ type Project = {
 const projects: Project[] = [
   {
     id: "cafe",
-    name: "The Corner Café",
+    name: "Odd Company Café",
     kind: "Café concept",
     tag: "CONCEPT",
     address: "yourcafe.com.au",
@@ -36,15 +36,15 @@ const projects: Project[] = [
   },
   {
     id: "boredom",
-    name: "The Boredom Project",
-    kind: "Our own website",
-    tag: "LIVE",
-    address: "theboredomproject.au",
+    name: "SEND NOODS",
+    kind: "A little messy. A lot of happy",
+    tag: "CONCEPT",
+    address: "sendnoods.au",
     thumb: "/studio/boredom-thumb.png",
     full: "/studio/boredom-full.png",
-    alt: "The Boredom Project website",
+    alt: "Send Noods website",
     blurb:
-      "The site you're on. Big personality, bold design and built from scratch. Because we'd never sell you something we wouldn't use ourselves.",
+      "Funky little noodle bar website jampacked with personality and quirky presentation. A simple one-page site to show off the menu and make it easy to get in touch.",
     points: [
       "Custom-built, no templates",
       "Contact form straight to the inbox",
@@ -53,15 +53,15 @@ const projects: Project[] = [
   },
   {
     id: "workhorse",
-    name: "Workhorse Marketing",
-    kind: "Marketing consultancy",
-    tag: "LIVE",
-    address: "workhorsemarketing.au",
+    name: "The Vow Edit",
+    kind: "Wedding Social Content Creator",
+    tag: "CONCEPT",
+    address: "thevowedit.au",
     thumb: "/studio/workhorse-thumb.jpg",
     full: "/studio/workhorse-full.jpg",
-    alt: "Workhorse Marketing website",
+    alt: "the vow edit website",
     blurb:
-      "A marketing consultancy with its own personality. Editorial styling, confident typography and a straightforward path from first impression to enquiry.",
+      "A wedding social content creator with a big personality. A simple one-page site to show off the work and make it easy to get in touch.",
     points: [
       "Editorial design with a full-bleed hero",
       "Services and results laid out for skimming",
