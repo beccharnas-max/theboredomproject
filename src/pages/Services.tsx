@@ -36,7 +36,7 @@ export default function Services() {
             <p>
               A fully custom multi-page website for small businesses ready to show up properly
               online. Designed and coded from scratch, with all the personality and none of the
-              bloat. Starting from $899
+              bloat. Starting from $1099
             </p>
             <a
               href="mailto:hello@theboredomproject.studio?subject=Signature%20Website%20project"
@@ -70,7 +70,7 @@ export default function Services() {
             </h2>
             <p>
               One brilliant scrolling page with everything your customer needs—ideal for new
-              ventures, focused offers and businesses that want to keep it beautifully simple. Starting at $600
+              ventures, focused offers and businesses that want to keep it beautifully simple. Starting at $800
             </p>
             <a
               href="mailto:hello@theboredomproject.studio?subject=One%20Page%20Wonder%20project"

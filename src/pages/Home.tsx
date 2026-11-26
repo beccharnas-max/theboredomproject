@@ -320,7 +320,7 @@ export default function Home() {
             <h2>
               STARTING FROM
               <br />
-              <strong>$600</strong>
+              <strong>$800</strong>
             </h2>
           </div>
           <div className="price-details">
@@ -330,7 +330,7 @@ export default function Home() {
               PAYMENT
             </div>
             <p>
-              One-page websites start from $600. Multi-page websites start from $899. You pay once
+              One-page websites start from $800. Multi-page websites start from $1099. You pay once
               for the build, plus your own domain name.
             </p>
             <small>
