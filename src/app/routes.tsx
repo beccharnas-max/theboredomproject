@@ -5,6 +5,7 @@ import Home from "../pages/Home";
 import Services from "../pages/Services";
 import Contact from "../pages/Contact";
 import Terms from "../pages/Terms";
+import Studio from "../pages/Studio";
 
 export const router = createBrowserRouter([
   {
@@ -15,6 +16,7 @@ export const router = createBrowserRouter([
       { path: "services", Component: Services },
       { path: "contact", Component: Contact },
       { path: "terms", Component: Terms },
+      { path: "studio", Component: Studio },
       { path: "*", element: <Navigate to="/" replace /> },
     ],
   },
