@@ -104,7 +104,7 @@ const studioStyles = `
   max-width: 90rem;
   text-transform: uppercase;
   text-shadow: 4px 4px 0 var(--ink);
-  color: var(--ink);
+  color: var(--paper);
 }
 
 .studio-hero h1 span {
@@ -433,7 +433,6 @@ const studioStyles = `
   background: var(--paper);
   border: 2px solid var(--ink);
   box-shadow: 9px 9px 0 var(--acid);
-  animation: studioPop .3s ease both;
 }
 
 .studio-bar {
