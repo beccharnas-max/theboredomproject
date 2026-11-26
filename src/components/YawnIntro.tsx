@@ -1,9 +1,10 @@
+
 import { useEffect } from "react";
 
 // Total length of the yawn, and the moment the page behind starts animating.
 // If you change YAWN_MS the CSS follows automatically.
-export const YAWN_MS = 4600;
-const REVEAL_AT_MS = 3900;
+export const YAWN_MS = 5600;
+const REVEAL_AT_MS = 3500;
 
 const STORAGE_KEY = "boredom-yawned";
 
@@ -26,7 +27,7 @@ const yawnStyles = `
 .yawn {
   /* quick knobs */
   --yawn-bg: var(--bp-ink, #111);          /* background colour behind the mascot */
-  --yawn-ring: var(--bp-accent, #ee4f27);  /* the lips */
+  --yawn-ring: #e53935;                   /* red ring */
   --yawn-w: 70vmin;                        /* mascot size */
   --yawn-y: 64%;                           /* how far down the mouth sits */
 
@@ -90,7 +91,7 @@ const yawnStyles = `
 .y-eye-shut { opacity: 0; animation: yawnEyeShut ${YAWN_MS}ms ease-in-out both; }
 .y-brow-move { animation: yawnBrow ${YAWN_MS}ms ease-in-out both; }
 
-/* the lips: a thick ring that rides the edge of the hole */
+/* the lips: a thick red ring that rides the edge of the hole */
 .yawn-ring {
   position: absolute;
   left: 50%;
@@ -170,14 +171,17 @@ const yawnStyles = `
   outline: none;
 }
 
-/* the mouth: bored pause, opens into a big yawn, holds, then swallows the screen */
+/* Hold for 1.5 seconds, then expand in one continuous smooth movement */
 @keyframes yawnMouth {
-  0%   { --yawn-rx: 1.4vmin; --yawn-ry: .5vmin;  animation-timing-function: ease-in-out; }
-  15%  { --yawn-rx: 1.8vmin; --yawn-ry: .6vmin;  animation-timing-function: ease-in-out; }
-  32%  { --yawn-rx: 7vmin;   --yawn-ry: 9vmin;   animation-timing-function: ease-in-out; }
-  50%  { --yawn-rx: 11vmin;  --yawn-ry: 14vmin;  animation-timing-function: ease-in-out; }
-  64%  { --yawn-rx: 11.6vmin; --yawn-ry: 14.6vmin; animation-timing-function: cubic-bezier(.6, 0, .8, .5); }
-  100% { --yawn-rx: 150vmax; --yawn-ry: 150vmax; }
+  0%, 41.6667% {
+    --yawn-rx: 1.4vmin;
+    --yawn-ry: .5vmin;
+  }
+  100% {
+    --yawn-rx: 150vmax;
+    --yawn-ry: 150vmax;
+    animation-timing-function: cubic-bezier(.4, 0, .2, 1);
+  }
 }
 
 @keyframes yawnEyeOpen {
