@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router";
 
@@ -9,12 +10,16 @@ export function PageMeta({ title, description }: { title: string; description: s
   useEffect(() => {
     document.title = title;
 
-    let meta = document.querySelector<HTMLMetaElement>('meta[name="description"]');
+    let meta = document.querySelector<HTMLMetaElement>(
+      'meta[name="description"]'
+    );
+
     if (!meta) {
       meta = document.createElement("meta");
       meta.name = "description";
       document.head.appendChild(meta);
     }
+
     meta.content = description;
   }, [title, description]);
 
@@ -37,6 +42,7 @@ function Nav() {
         <br />
         PROJECT
       </Link>
+
       <button
         className="menu-toggle"
         type="button"
@@ -46,6 +52,7 @@ function Nav() {
       >
         {open ? "CLOSE" : "MENU"}
       </button>
+
       <nav
         id="site-nav"
         className={open ? "nav-links open" : "nav-links"}
@@ -77,14 +84,21 @@ export function Footer() {
           <br />
           WITH A STORY?
         </p>
+
         <Link to="/contact">
           LET'S MAKE
           <br />
           SOMETHING <Arrow />
         </Link>
       </div>
+
       <div className="footer-bottom">
         <span>THE BOREDOM PROJECT © {new Date().getFullYear()}</span>
+
+        <Link to="/terms">
+          TERMS & CONDITIONS
+        </Link>
+
         <span>INDEPENDENTLY MADE. NEVER BORING.</span>
       </div>
     </footer>
@@ -93,7 +107,10 @@ export function Footer() {
 
 export function RootLayout() {
   const location = useLocation();
-  const [remixed, setRemixed] = useState(() => localStorage.getItem("boredom-palette") === "remix");
+
+  const [remixed, setRemixed] = useState(
+    () => localStorage.getItem("boredom-palette") === "remix"
+  );
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -102,7 +119,12 @@ export function RootLayout() {
   const togglePalette = () => {
     setRemixed((current) => {
       const next = !current;
-      localStorage.setItem("boredom-palette", next ? "remix" : "original");
+
+      localStorage.setItem(
+        "boredom-palette",
+        next ? "remix" : "original"
+      );
+
       return next;
     });
   };
@@ -121,7 +143,9 @@ export function RootLayout() {
           <b />
         </i>
       </button>
+
       <Nav />
+
       <Outlet />
     </div>
   );
