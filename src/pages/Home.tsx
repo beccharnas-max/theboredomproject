@@ -199,7 +199,7 @@ const funkStyles = `
 .devices {
   position: relative;
   padding: clamp(60px, 8vw, 100px) 4vw clamp(90px, 10vw, 130px);
-  background: var(--acid);
+  background: var(--paper);
 }
 .devices-stage {
   --tx: 0;
@@ -743,6 +743,39 @@ export default function Home() {
         </section>
 
         <section
+          ref={zoneRef}
+          className={`for-you pill-zone${pillsAnimated ? " is-animated" : ""}`}
+        >
+          <div className="for-you-title" ref={titleRef}>
+            <span className="section-tag">[ IS THIS YOU? ]</span>
+            <h2>
+              SMALL BUSINESS.
+              <br />
+              <em>BIG ENERGY.</em>
+            </h2>
+            <p className="for-you-note">
+              Some of the industries I work with to bring ideas to life: cafés, restaurants,
+              salons, photographers, social media managers, home services and independent creatives.
+            </p>
+          </div>
+          <div className="pill-field" role="list">
+            {audiences.map((item, index) => (
+              <div
+                className="pill"
+                role="listitem"
+                key={item.label}
+                ref={(el) => {
+                  pillRefs.current[index] = el;
+                }}
+                style={{ ["--pill" as string]: item.color }}
+              >
+                {item.label}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section
           ref={devicesRef}
           className={`devices${devicesVisible ? " in-view" : ""}`}
           aria-label="Websites made by The Boredom Project"
@@ -795,39 +828,6 @@ export default function Home() {
 
               <div className="tape tape-one">MADE FOR REAL PEOPLE</div>
             </div>
-          </div>
-        </section>
-
-        <section
-          ref={zoneRef}
-          className={`for-you pill-zone${pillsAnimated ? " is-animated" : ""}`}
-        >
-          <div className="for-you-title" ref={titleRef}>
-            <span className="section-tag">[ IS THIS YOU? ]</span>
-            <h2>
-              SMALL BUSINESS.
-              <br />
-              <em>BIG ENERGY.</em>
-            </h2>
-            <p className="for-you-note">
-              Some of the industries I work with to bring ideas to life: cafés, restaurants,
-              salons, photographers, social media managers, home services and independent creatives.
-            </p>
-          </div>
-          <div className="pill-field" role="list">
-            {audiences.map((item, index) => (
-              <div
-                className="pill"
-                role="listitem"
-                key={item.label}
-                ref={(el) => {
-                  pillRefs.current[index] = el;
-                }}
-                style={{ ["--pill" as string]: item.color }}
-              >
-                {item.label}
-              </div>
-            ))}
           </div>
         </section>
 
