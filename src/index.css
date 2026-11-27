@@ -860,7 +860,7 @@
 }
 
 footer {
-  background: var(--acid);
+  background: var(--paper);
   border-top: 2px solid;
   padding: 90px 5vw 30px;
 }

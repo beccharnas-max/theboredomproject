@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router";
 
@@ -98,6 +97,15 @@ export function Footer() {
         <Link to="/terms">
           TERMS & CONDITIONS
         </Link>
+
+        <a
+          href="https://www.instagram.com/theboredomprojectau/"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="The Boredom Project on Instagram (opens in a new tab)"
+        >
+          INSTAGRAM <Arrow />
+        </a>
 
         <span>INDEPENDENTLY MADE. NEVER BORING.</span>
       </div>

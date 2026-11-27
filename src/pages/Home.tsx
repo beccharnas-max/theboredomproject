@@ -1,34 +1,51 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type PointerEvent } from "react";
 import { Link } from "react-router";
 import { Arrow, Footer, PageMeta } from "../components/SiteChrome";
 import YawnIntro, { shouldPlayYawn } from "../components/YawnIntro";
 
-const photos = [
-  {
-    src: "https://images.unsplash.com/photo-1779558709972-3412e61d0d7f?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&q=85&w=1200",
-    alt: "A vibrant independent cafe with colorful outdoor tables and chairs",
-    label: "CAFÉS",
-    credit: "Hồng Xuân Văn",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1790731123388-5365ace3be4e?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&q=85&w=1200",
-    alt: "A small storefront with a colorful mural and sidewalk sign",
-    label: "LOCAL SHOPS",
-    credit: "ANGIE BAONGOC",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1792767998018-8f38ff9d465f?crop=entropy&cs=tinysrgb&fit=crop&fm=jpg&q=85&w=1200",
-    alt: "A colorful building covered in geometric murals",
-    label: "BOLD IDEAS",
-    credit: "Kelvin Zyteng",
-  },
+// The two site screenshots shown in the browser and phone on the home page.
+// They live in /public/studio. If an image can't be found under the first name, the next one is tried,
+// so a .png/.jpg mix-up won't leave a blank frame. Swap names or order here whenever you like.
+const BROWSER_IMAGES = [
+  "/studio/workhorse-thumb.jpg",
+  "/studio/workhorse-thumb.png",
+  "/studio/vow-edit-thumb.jpg",
+  "/studio/vow-edit-thumb.png",
+];
+const PHONE_IMAGES = [
+  "/studio/boredom-thumb.png",
+  "/studio/boredom-thumb.jpg",
+  "/studio/slurp-thumb.jpg",
+  "/studio/slurp-thumb.png",
 ];
 
+function Shot({ srcs, alt, name }: { srcs: string[]; alt: string; name: string }) {
+  const [index, setIndex] = useState(0);
+
+  if (index >= srcs.length) {
+    return (
+      <div className="shot-missing" role="img" aria-label={alt}>
+        <strong>{name}</strong>
+        <span>SCREENSHOT COMING SOON</span>
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={srcs[index]}
+      alt={alt}
+      draggable={false}
+      onError={() => setIndex((current) => current + 1)}
+    />
+  );
+}
+
 const audiences = [
-  "CAFÉS + COFFEE SHOPS",
-  "SALONS + BEAUTY",
-  "HOME SERVICES",
+  "CAFÉS + COFFEE SHOPS + RESTAURANTS",
   "CREATIVE + CURIOUS THINGS",
+  "PORTFOLIOS + PHOTOGRAPHY + SMM",
+  "SALONS + BEAUTY",
 ];
 
 // All the new animation styles live here so this file is the only thing you need to swap.
@@ -154,6 +171,158 @@ const funkStyles = `
   .intro-sticker { display: none; }
 }
 
+/* ---------- DEVICES: a browser and a phone, pinned to the wall ---------- */
+.devices {
+  position: relative;
+  padding: clamp(60px, 8vw, 100px) 4vw clamp(90px, 10vw, 130px);
+  background: var(--acid);
+}
+.devices-stage {
+  --tx: 0;
+  --ty: 0;
+  position: relative;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding-bottom: clamp(3rem, 8vw, 6rem);
+  perspective: 1400px;
+}
+.devices-tilt {
+  position: relative;
+  transform-style: preserve-3d;
+  transform: rotateY(calc(var(--tx) * 7deg)) rotateX(calc(var(--ty) * -5deg));
+  transition: transform .3s ease-out;
+}
+.device { margin: 0; position: relative; opacity: 0; }
+.device-frame {
+  box-shadow: calc(8px - var(--tx) * 10px) calc(8px - var(--ty) * 10px) 0 var(--ink);
+  transition: box-shadow .3s ease-out;
+}
+.device-float { animation: devFloat 6s ease-in-out infinite alternate; }
+.phone .device-float { animation-duration: 5s; animation-delay: -2s; }
+@keyframes devFloat { from { translate: 0 0; } to { translate: 0 -8px; } }
+
+/* the screenshot drifts a touch against its frame, so it feels like it has depth */
+.device img {
+  translate: calc(var(--tx) * -6px) calc(var(--ty) * -4px);
+  scale: 1.06;
+  transition: translate .3s ease-out;
+}
+
+.browser { width: 70%; rotate: -2.5deg; }
+.browser .device-frame { background: var(--paper); border: 2px solid var(--ink); }
+.browser-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  background: var(--ink);
+  color: var(--paper);
+}
+.browser-dots { display: flex; gap: 6px; }
+.browser-dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--paper); opacity: .45; display: block; }
+.browser-address {
+  flex: 1;
+  min-width: 0;
+  padding: 4px 10px;
+  border-radius: 99px;
+  background: rgba(246, 242, 233, .14);
+  font: 500 10px "DM Mono", monospace;
+  letter-spacing: .04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.browser-screen { aspect-ratio: 2 / 1; overflow: hidden; background: var(--paper); }
+.browser-screen img { width: 100%; height: 100%; object-fit: cover; object-position: top; display: block; }
+
+.phone { position: absolute; right: 2%; bottom: -4rem; width: 23%; rotate: 5deg; translate: 0 0 70px; }
+.phone .device-frame {
+  position: relative;
+  padding: 8px;
+  background: var(--ink);
+  border: 2px solid var(--ink);
+  border-radius: 30px;
+}
+.phone-notch {
+  position: absolute;
+  top: 13px;
+  left: 50%;
+  width: 30%;
+  height: 7px;
+  border-radius: 99px;
+  background: rgba(246, 242, 233, .25);
+  transform: translateX(-50%);
+  z-index: 2;
+}
+.phone-screen { aspect-ratio: 9 / 16; border-radius: 22px; overflow: hidden; background: var(--paper); }
+.phone-screen img { width: 100%; height: 100%; object-fit: cover; object-position: 72% 50%; display: block; }
+
+.device-tag {
+  position: absolute;
+  z-index: 3;
+  padding: 6px 10px;
+  border: 2px solid var(--ink);
+  background: var(--paper);
+  box-shadow: 3px 3px 0 var(--ink);
+  font: 500 10px "DM Mono", monospace;
+  letter-spacing: .06em;
+  white-space: nowrap;
+}
+.browser .device-tag { top: -14px; left: 14px; rotate: -3deg; }
+.phone .device-tag { top: -16px; right: -10px; rotate: 4deg; }
+
+.devices .tape-one {
+  left: 6%;
+  right: auto;
+  bottom: -1.4rem;
+  translate: 0 0 100px;
+  transform: rotate(-5deg);
+  opacity: 0;
+}
+
+.devices.in-view .browser { animation: devBrowserIn .9s cubic-bezier(.34, 1.4, .64, 1) both; }
+.devices.in-view .phone { animation: devPhoneIn .9s .2s cubic-bezier(.34, 1.56, .64, 1) both; }
+.devices.in-view .tape-one { animation: devTapeIn .5s .55s cubic-bezier(.34, 2, .64, 1) both; }
+@keyframes devBrowserIn {
+  0%   { opacity: 0; translate: 0 140px 0; rotate: -9deg; scale: .85; }
+  100% { opacity: 1; translate: 0 0 0; rotate: -2.5deg; scale: 1; }
+}
+@keyframes devPhoneIn {
+  0%   { opacity: 0; translate: 0 220px 70px; rotate: 14deg; scale: .8; }
+  100% { opacity: 1; translate: 0 0 70px; rotate: 5deg; scale: 1; }
+}
+@keyframes devTapeIn {
+  0%   { opacity: 0; scale: 1.8; }
+  100% { opacity: 1; scale: 1; }
+}
+
+.shot-missing {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: .6rem;
+  padding: 1.5rem;
+  background: repeating-linear-gradient(135deg, #f1ede2, #f1ede2 14px, #e6e1d2 14px, #e6e1d2 28px);
+  color: #111;
+}
+.shot-missing strong { font-size: clamp(1.1rem, 2.4vw, 1.8rem); line-height: 1; }
+.shot-missing span { font: 500 10px "DM Mono", monospace; letter-spacing: .08em; }
+
+@media (max-width: 800px) {
+  .devices-tilt { transform: none; }
+  .browser { width: 92%; }
+  .phone { width: 36%; right: 0; bottom: -3.5rem; }
+  .devices-stage { padding-bottom: 5rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .devices .device, .devices .tape-one { opacity: 1; animation: none !important; }
+  .device-float { animation: none; }
+  .devices-tilt { transform: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hero h1 .fly-line,
   .intro-sticker {
@@ -192,10 +361,30 @@ function useInView<T extends HTMLElement>(threshold = 0.2) {
 
 export default function Home() {
   const [introRef, introVisible] = useInView<HTMLElement>(0.3);
-  const [photoStripRef, photosVisible] = useInView<HTMLElement>(0.2);
+  const [devicesRef, devicesVisible] = useInView<HTMLElement>(0.2);
+  const stageRef = useRef<HTMLDivElement>(null);
   const [intro, setIntro] = useState<"playing" | "revealing" | "done">(() =>
     shouldPlayYawn() ? "playing" : "done",
   );
+
+  // The browser and phone lean towards the mouse. Touch screens skip this.
+  function handleDeviceMove(event: PointerEvent<HTMLDivElement>) {
+    if (event.pointerType !== "mouse") return;
+    const stage = stageRef.current;
+    if (!stage) return;
+    const rect = stage.getBoundingClientRect();
+    const x = ((event.clientX - rect.left) / rect.width - 0.5) * 2;
+    const y = ((event.clientY - rect.top) / rect.height - 0.5) * 2;
+    stage.style.setProperty("--tx", x.toFixed(3));
+    stage.style.setProperty("--ty", y.toFixed(3));
+  }
+
+  function handleDeviceLeave() {
+    const stage = stageRef.current;
+    if (!stage) return;
+    stage.style.setProperty("--tx", "0");
+    stage.style.setProperty("--ty", "0");
+  }
 
   return (
     <>
@@ -246,7 +435,7 @@ export default function Home() {
               <p>
                 So why should your website be? The Boredom Project builds custom websites around
                 your style, your story and your customers. No weird subscriptions. No
-                cookie-cutter nonsense.
+                unnecessary nonsense.
               </p>
               <Link to="/services" className="text-link">
                 HOW IT WORKS <Arrow />
@@ -261,20 +450,59 @@ export default function Home() {
         </section>
 
         <section
-          ref={photoStripRef}
-          className={`photo-strip${photosVisible ? " in-view" : ""}`}
-          aria-label="Businesses like yours"
+          ref={devicesRef}
+          className={`devices${devicesVisible ? " in-view" : ""}`}
+          aria-label="Websites made by The Boredom Project"
         >
-          {photos.map((photo, index) => (
-            <figure key={photo.label} className={`photo-card card-${index + 1}`}>
-              <img src={photo.src} alt={photo.alt} />
-              <figcaption>
-                <span>{photo.label}</span>
-                <small>PHOTO: {photo.credit}</small>
-              </figcaption>
-            </figure>
-          ))}
-          <div className="tape tape-one">MADE FOR REAL PEOPLE</div>
+          <div
+            ref={stageRef}
+            className="devices-stage"
+            onPointerMove={handleDeviceMove}
+            onPointerLeave={handleDeviceLeave}
+          >
+            <div className="devices-tilt">
+              <figure className="device browser">
+                <div className="device-float">
+                  <div className="device-frame">
+                    <div className="browser-bar" aria-hidden="true">
+                      <span className="browser-dots">
+                        <i />
+                        <i />
+                        <i />
+                      </span>
+                      <span className="browser-address">concept · the vow edit</span>
+                    </div>
+                    <div className="browser-screen">
+                      <Shot
+                        srcs={BROWSER_IMAGES}
+                        alt="Concept website for a wedding content creator, with a soft cream homepage, a large serif headline and a full-width photo of a couple"
+                        name="The Vow Edit"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <figcaption className="device-tag">CONCEPT · WEDDING CREATOR</figcaption>
+              </figure>
+
+              <figure className="device phone">
+                <div className="device-float">
+                  <div className="device-frame">
+                    <span className="phone-notch" aria-hidden="true" />
+                    <div className="phone-screen">
+                      <Shot
+                        srcs={PHONE_IMAGES}
+                        alt="Concept website for a noodle bar, with a bold red homepage and a smiling noodle bowl mascot"
+                        name="Slurp!"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <figcaption className="device-tag">CONCEPT · NOODLE BAR</figcaption>
+              </figure>
+
+              <div className="tape tape-one">MADE FOR REAL PEOPLE</div>
+            </div>
+          </div>
         </section>
 
         <section className="for-you">
