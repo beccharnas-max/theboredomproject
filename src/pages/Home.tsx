@@ -13,7 +13,7 @@ const BROWSER_IMAGES = [
   "/studio/vow-edit-thumb.png",
 ];
 const PHONE_IMAGES = [
-  "/studio/boredom-thumb.png",
+  "/studio/slurp.png",
   "/studio/boredom-thumb.jpg",
   "/studio/slurp-thumb.jpg",
   "/studio/slurp-thumb.png",
@@ -41,11 +41,35 @@ function Shot({ srcs, alt, name }: { srcs: string[]; alt: string; name: string }
   );
 }
 
+// Each audience is a pill. Change the colours here whenever you like.
+// "home" is where the pill comes to rest: fx is how far across (0 to 1), fy is how far down
+// the free space under the title (0 to 1), rot is its resting tilt in degrees.
+// "follow" is how quickly it chases the cursor (higher = quicker), so they trail like a little gang.
 const audiences = [
-  "CAFÉS + COFFEE SHOPS + RESTAURANTS",
-  "CREATIVE + CURIOUS THINGS",
-  "PORTFOLIOS + PHOTOGRAPHY + SMM",
-  "SALONS + BEAUTY",
+  {
+    label: "CAFÉS + COFFEE SHOPS + RESTAURANTS",
+    color: "var(--acid)",
+    home: { fx: 0.04, fy: 0.0, rot: -4 },
+    follow: 0.07,
+  },
+  {
+    label: "CREATIVE + CURIOUS THINGS",
+    color: "var(--pink)",
+    home: { fx: 0.72, fy: 0.27, rot: 3 },
+    follow: 0.05,
+  },
+  {
+    label: "PORTFOLIOS + PHOTOGRAPHY + SMM",
+    color: "var(--blue)",
+    home: { fx: 0.2, fy: 0.55, rot: 2.5 },
+    follow: 0.036,
+  },
+  {
+    label: "SALONS + BEAUTY",
+    color: "var(--orange)",
+    home: { fx: 0.62, fy: 0.82, rot: -3 },
+    follow: 0.026,
+  },
 ];
 
 // All the new animation styles live here so this file is the only thing you need to swap.
@@ -331,6 +355,87 @@ const funkStyles = `
   .intro-sticker { scale: 1; }
   .intro .strike::after { transition: none; }
 }
+
+/* ---------- IS THIS YOU?: falling pills that follow the cursor ---------- */
+/* Default (phones, reduced motion, before JS runs): a plain, readable stack of pills. */
+.pill-zone {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(60px, 8vw, 100px) 4vw clamp(60px, 8vw, 100px);
+  background: var(--paper, #f5f2ea);
+  color: var(--ink, #111);
+}
+.pill-zone .for-you-title {
+  position: relative;
+  z-index: 1;
+  margin-bottom: clamp(2rem, 5vw, 3.5rem);
+}
+.pill-zone .for-you-title {
+  flex-wrap: wrap;
+}
+.pill-zone .for-you-title h2 {
+  margin-bottom: 0;
+}
+/* small plain note under the heading, lined up with the big text */
+.pill-zone .for-you-note {
+  flex-basis: 100%;
+  width: 70%;
+  max-width: 36rem;
+  margin: clamp(1.25rem, 3vw, 2rem) 0 0 auto;
+  color: #000;
+  font-family: "Manrope", sans-serif;
+  font-size: clamp(.95rem, 1.3vw, 1.15rem);
+  font-weight: 600;
+  line-height: 1.5;
+}
+@media (max-width: 800px) {
+  .pill-zone .for-you-note {
+    width: 100%;
+    max-width: none;
+    margin-left: 0;
+  }
+}
+
+.pill-field {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .8rem;
+}
+.pill {
+  display: inline-block;
+  padding: .55em 1.4em;
+  border: 3px solid var(--ink, #111);
+  border-radius: 999px;
+  background: var(--pill, #ff7a2f);
+  color: var(--ink, #111);
+  box-shadow: 4px 4px 0 var(--ink, #111);
+  font-weight: 800;
+  font-size: clamp(1rem, 2.6vw, 2.2rem);
+  line-height: 1.1;
+  letter-spacing: .02em;
+  user-select: none;
+}
+
+/* Animated mode: the pills sit over the whole section and are moved by script. */
+.pill-zone.is-animated {
+  min-height: clamp(40rem, 110vh, 60rem);
+}
+.pill-zone.is-animated .pill-field {
+  position: absolute;
+  inset: 0;
+  display: block;
+  pointer-events: none;
+}
+.pill-zone.is-animated .pill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0;
+  white-space: nowrap;
+  will-change: transform;
+}
 `;
 
 // Fires once, the first time the element scrolls into view.
@@ -366,6 +471,194 @@ export default function Home() {
   const [intro, setIntro] = useState<"playing" | "revealing" | "done">(() =>
     shouldPlayYawn() ? "playing" : "done",
   );
+
+  // "Is this you?" pills.
+  const [zoneRef, zoneVisible] = useInView<HTMLElement>(0.25);
+  const titleRef = useRef<HTMLDivElement>(null);
+  const pillRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [pillsAnimated, setPillsAnimated] = useState(false);
+
+  // Phones and reduced-motion users get the plain stack instead.
+  useEffect(() => {
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const small = window.matchMedia("(max-width: 800px)");
+    const check = () => setPillsAnimated(!reducedMotion.matches && !small.matches);
+
+    check();
+    reducedMotion.addEventListener?.("change", check);
+    small.addEventListener?.("change", check);
+    return () => {
+      reducedMotion.removeEventListener?.("change", check);
+      small.removeEventListener?.("change", check);
+    };
+  }, []);
+
+  // Drop the pills in once the section is on screen, then let them chase the cursor.
+  useEffect(() => {
+    const zone = zoneRef.current;
+    const title = titleRef.current;
+    if (!pillsAnimated || !zoneVisible || !zone || !title) return;
+
+    const els = pillRefs.current.filter((el): el is HTMLDivElement => el !== null);
+    if (els.length !== audiences.length) return;
+
+    type Pill = {
+      el: HTMLDivElement;
+      w: number;
+      h: number;
+      hx: number;
+      hy: number;
+      hrot: number;
+      ox: number;
+      oy: number;
+      follow: number;
+      x: number;
+      y: number;
+      vy: number;
+      rot: number;
+      state: "waiting" | "falling" | "landed";
+    };
+
+    const clamp = (value: number, min: number, max: number) =>
+      Math.max(min, Math.min(max, value));
+
+    const pills: Pill[] = els.map((el, i) => {
+      const angle = i * ((Math.PI * 2) / els.length) + 0.6;
+      return {
+        el,
+        w: 0,
+        h: 0,
+        hx: 0,
+        hy: 0,
+        hrot: audiences[i].home.rot,
+        // each pill hangs around the cursor at its own spot, so they don't pile up
+        ox: Math.cos(angle) * 90,
+        oy: Math.sin(angle) * 60,
+        follow: audiences[i].follow,
+        x: 0,
+        y: 0,
+        vy: 0,
+        rot: audiences[i].home.rot,
+        state: "waiting",
+      };
+    });
+
+    let width = 0;
+    let height = 0;
+
+    // Works out where each pill rests. Runs on load and whenever the window resizes.
+    const measure = () => {
+      width = zone.clientWidth;
+      height = zone.clientHeight;
+      const titleBottom = title.offsetTop + title.offsetHeight;
+
+      pills.forEach((pill, i) => {
+        pill.w = pill.el.offsetWidth;
+        pill.h = pill.el.offsetHeight;
+        const home = audiences[i].home;
+        const freeHeight = Math.max(height - titleBottom - pill.h - 40, 0);
+        pill.hx = home.fx * Math.max(width - pill.w, 0);
+        pill.hy = titleBottom + 20 + home.fy * freeHeight;
+      });
+    };
+
+    measure();
+
+    // Start every pill above the top of the section (hidden), then reveal it.
+    pills.forEach((pill) => {
+      pill.x = pill.hx;
+      pill.y = -pill.h - 80;
+      pill.el.style.transform = `translate3d(${pill.x}px, ${pill.y}px, 0) rotate(${pill.rot}deg)`;
+      pill.el.style.opacity = "1";
+    });
+
+    const pointer = { x: 0, y: 0, inside: false };
+
+    const onMove = (event: globalThis.PointerEvent) => {
+      if (event.pointerType !== "mouse") return;
+      pointer.x = event.clientX;
+      pointer.y = event.clientY;
+      pointer.inside = true;
+    };
+    const onLeave = () => {
+      pointer.inside = false;
+    };
+
+    zone.addEventListener("pointermove", onMove);
+    zone.addEventListener("pointerleave", onLeave);
+    window.addEventListener("resize", measure);
+
+    const start = performance.now();
+    let last = start;
+    let frame = 0;
+
+    const tick = (now: number) => {
+      const dt = Math.min((now - last) / 16.667, 2.5);
+      last = now;
+      const rect = zone.getBoundingClientRect();
+
+      pills.forEach((pill, i) => {
+        if (pill.state === "waiting") {
+          // staggered: one pill every 220ms
+          if (now - start < i * 220) return;
+          pill.state = "falling";
+        }
+
+        if (pill.state === "falling") {
+          pill.vy += 0.9 * dt;
+          pill.y += pill.vy * dt;
+          pill.x = pill.hx;
+          pill.rot += (pill.hrot - pill.rot) * 0.1 * dt;
+
+          if (pill.y >= pill.hy) {
+            pill.y = pill.hy;
+            if (pill.vy > 6) {
+              pill.vy = -pill.vy * 0.38; // a little bounce
+            } else {
+              pill.vy = 0;
+              pill.state = "landed";
+            }
+          }
+        } else {
+          let targetX = pill.hx;
+          let targetY = pill.hy;
+
+          if (pointer.inside) {
+            const px = pointer.x - rect.left;
+            const py = pointer.y - rect.top;
+            targetX = clamp(px - pill.w / 2 + pill.ox, 0, width - pill.w);
+            targetY = clamp(py - pill.h / 2 + pill.oy, 0, height - pill.h);
+          }
+
+          const ease = 1 - Math.pow(1 - pill.follow, dt);
+          const previousX = pill.x;
+          pill.x += (targetX - pill.x) * ease;
+          pill.y += (targetY - pill.y) * ease;
+
+          // lean into the direction of travel
+          const lean = clamp((pill.x - previousX) * 1.4, -14, 14);
+          pill.rot += (pill.hrot + lean - pill.rot) * 0.15 * dt;
+        }
+
+        pill.el.style.transform = `translate3d(${pill.x}px, ${pill.y}px, 0) rotate(${pill.rot}deg)`;
+      });
+
+      frame = requestAnimationFrame(tick);
+    };
+
+    frame = requestAnimationFrame(tick);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      zone.removeEventListener("pointermove", onMove);
+      zone.removeEventListener("pointerleave", onLeave);
+      window.removeEventListener("resize", measure);
+      pills.forEach((pill) => {
+        pill.el.style.transform = "";
+        pill.el.style.opacity = "";
+      });
+    };
+  }, [pillsAnimated, zoneVisible, zoneRef]);
 
   // The browser and phone lean towards the mouse. Touch screens skip this.
   function handleDeviceMove(event: PointerEvent<HTMLDivElement>) {
@@ -404,7 +697,7 @@ export default function Home() {
           <div className="hero-bottom">
             <p>
               Custom-built, personality-packed websites for independent businesses who refuse to
-              blend in.
+              blend in. Built in Sydney by a creative and curious human who loves coffee, cats and a good pun.
             </p>
             <Link to="/services" className="round-link" aria-label="See our services">
               SEE
@@ -505,20 +798,34 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="for-you">
-          <div className="for-you-title">
+        <section
+          ref={zoneRef}
+          className={`for-you pill-zone${pillsAnimated ? " is-animated" : ""}`}
+        >
+          <div className="for-you-title" ref={titleRef}>
             <span className="section-tag">[ IS THIS YOU? ]</span>
             <h2>
               SMALL BUSINESS.
               <br />
               <em>BIG ENERGY.</em>
             </h2>
+            <p className="for-you-note">
+              Some of the industries I work with to bring ideas to life: cafés, restaurants,
+              salons, photographers, social media managers, home services and independent creatives.
+            </p>
           </div>
-          <div className="audience-list">
+          <div className="pill-field" role="list">
             {audiences.map((item, index) => (
-              <div className="audience-row" key={item}>
-                <span>0{index + 1}</span>
-                <h3>{item}</h3>
+              <div
+                className="pill"
+                role="listitem"
+                key={item.label}
+                ref={(el) => {
+                  pillRefs.current[index] = el;
+                }}
+                style={{ ["--pill" as string]: item.color }}
+              >
+                {item.label}
               </div>
             ))}
           </div>

@@ -92,7 +92,8 @@ export function Footer() {
       </div>
 
       <div className="footer-bottom">
-        <span>THE BOREDOM PROJECT © {new Date().getFullYear()}</span>
+        <span>THE BOREDOM PROJECT © {new Date().getFullYear()} Gadigal Country
+        </span>
 
         <Link to="/terms">
           TERMS & CONDITIONS
@@ -107,7 +108,9 @@ export function Footer() {
           INSTAGRAM <Arrow />
         </a>
 
-        <span>INDEPENDENTLY MADE. NEVER BORING.</span>
+        <span>INDEPENDENTLY MADE. NEVER BORING.
+          SURRY HILL SYDNEY AUSTRALIA
+        </span>
       </div>
     </footer>
   );
